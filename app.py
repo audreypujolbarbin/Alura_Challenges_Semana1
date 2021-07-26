@@ -2,6 +2,7 @@ import pandas as pd
 import sqlite3 as sq3
 import json as jsn
 from flask import Flask
+from pandas.io.sql import execute
 
 app = Flask(__name__)
 
@@ -38,3 +39,41 @@ def delete_video(video_id):
         return 'Ops, o vídeo selecionado não pôde ser deletado. Você colocou o vídeo certo?'
     else: 
         return 'Seu vídeo foi deletado com sucesso!'
+
+@app.route('/videos', methods=['POST'])
+def novo_video():
+    error = None
+    if validate_payload(request.form['Título'],
+                    request.form['Descrição'],
+                    request.form['URL']):
+        con = sq3.connect('frttt.db')
+        cur = con.cursor()
+        maximo_id = list(cur.execute ('Select MAX (ID) from videos'))
+        novo_id = maximo_id[0][0] + 1
+        cur.execute("INSERT INTO videos VALUES ({}, '{}', '{}', '{}')".format(
+            novo_id, request.form['Título'], request.form['Descrição'], request.form['URL']
+        ))
+        con.commit()
+        con.close ()
+        return show_video_information(novo_id)
+
+def validate_payload(title, description, url): 
+    if not isinstance (title, str):
+        return False
+    if len (title) == 0:
+        return False
+    if len (title) >= 50:
+        return False
+    if not isinstance (description, str):
+        return False
+    if len (description) == 0:
+        return False
+    if len (description) >= 150:
+        return False
+    if not isinstance (url, str):
+        return False
+    if len (url) == 0:
+        return False
+    if len (url) >= 200:
+        return False
+    return True
