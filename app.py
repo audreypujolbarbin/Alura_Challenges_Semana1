@@ -25,5 +25,16 @@ def show_video_information(video_id):
         todos_video_id = jsn.dumps(todos[0])
         return (todos_video_id)
 
+from flask import request
 
-
+@app.route('/videos/<video_id>', methods=['DELETE'])
+def delete_video(video_id):
+    con = sq3.connect('frttt.db')
+    cur = con.cursor()
+    todos = cur.execute('DELETE FROM videos WHERE ID = {}'.format(video_id))
+    con.commit()
+    video_deletado = todos.rowcount
+    if video_deletado == 0:
+        return 'Ops, o vídeo selecionado não pôde ser deletado. Você colocou o vídeo certo?'
+    else: 
+        return 'Seu vídeo foi deletado com sucesso!'
